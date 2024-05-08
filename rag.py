@@ -5,9 +5,9 @@ import vertexai
 # Create a RAG Corpus, Import Files, and Generate a response
 
 # TODO(developer): Update and un-comment below lines
-# project_id = "PROJECT_ID"
-# display_name = "test_corpus"
-# paths = ["https://drive.google.com/file/123", "gs://my_bucket/my_files_dir"]  # Supports Google Cloud Storage and Google Drive Links
+project_id = "test-project-420719"
+display_name = "test_corpus"
+paths = ["https://drive.google.com/file/d/1djxpB5ScMHxj8CZkXd_8iHEgou8r6SJh"]  # Supports Google Cloud Storage and Google Drive Links
 
 # Initialize Vertex AI API once per session
 vertexai.init(project=project_id, location="us-central1")
@@ -26,7 +26,7 @@ response = rag.import_files(
 # Direct context retrieval
 response = rag.retrieval_query(
     rag_corpora=[rag_corpus.name],
-    text="What is RAG and why it is helpful?",
+    text="How many people live in Sillyville?",
     similarity_top_k=10,
 )
 print(response)
@@ -47,5 +47,5 @@ rag_model = GenerativeModel(
 )
 
 # Generate response
-response = rag_model.generate_content("What is RAG and why it is helpful?")
+response = rag_model.generate_content("Is Jeffrey in Sillyville on time for anything?")
 print(response.text)
