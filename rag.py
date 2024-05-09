@@ -7,13 +7,14 @@ import vertexai
 # TODO(developer): Update and un-comment below lines
 project_id = "test-project-420719"
 display_name = "test_corpus"
-paths = ["https://drive.google.com/file/d/1djxpB5ScMHxj8CZkXd_8iHEgou8r6SJh"]  # Supports Google Cloud Storage and Google Drive Links
+paths = ["https://drive.google.com/file/d/1djxpB5ScMHxj8CZkXd_8iHEgou8r6SJh","https://drive.google.com/file/d/1YS7uS4nKNxODIcuxLUhwk8nrIizR8A_M"]  # Supports Google Cloud Storage and Google Drive Links
 
 # Initialize Vertex AI API once per session
 vertexai.init(project=project_id, location="us-central1")
 
 # Create RagCorpus
 rag_corpus = rag.create_corpus(display_name=display_name)
+filtered_rag_corpus = rag.create_corpus(display_name="filtered_test_corpus")
 
 # Import Files to the RagCorpus
 response = rag.import_files(
@@ -26,17 +27,27 @@ response = rag.import_files(
 # Direct context retrieval
 response = rag.retrieval_query(
     rag_corpora=[rag_corpus.name],
-    text="How many people live in Sillyville?",
-    similarity_top_k=10,
+    text="Consider the people from Sillyville.",
+    similarity_top_k=1,
 )
-print(response)
+# print(response.contexts.contexts)
+
+filtered_paths = [str(source).split("source_uri: \"")[1].split("\"\ntext:")[0] for source in response.contexts.contexts]
+print(filtered_paths)
+
+response = rag.import_files(
+    filtered_rag_corpus.name,
+    filtered_paths,
+    chunk_size=512,  # Optional
+    chunk_overlap=100,  # Optional
+)
 
 # Enhance generation
 # Create a RAG retrieval tool
 rag_retrieval_tool = Tool.from_retrieval(
     retrieval=rag.Retrieval(
         source=rag.VertexRagStore(
-            rag_corpora=[rag_corpus.name],  # Currently only 1 corpus is allowed.
+            rag_corpora=[filtered_rag_corpus.name],  # Currently only 1 corpus is allowed.
             similarity_top_k=3,  # Optional
         ),
     )
@@ -47,5 +58,10 @@ rag_model = GenerativeModel(
 )
 
 # Generate response
-response = rag_model.generate_content("Is Jeffrey in Sillyville on time for anything?")
-print(response.text)
+inputstr = ""
+while not inputstr == "END":
+    inputstr = input("Input your query: ")
+    citestr = "Please cite the source url."
+    # response = rag_model.generate_content("Is Jeffrey in Sillyville on time for anything?")
+    response = rag_model.generate_content("You are an expert in the domain of Sillyville." + inputstr + citestr)
+    print(response.text)
